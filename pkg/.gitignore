@@ -1,0 +1,4 @@
+*
+!.gitignore
+!https_everywhere_lib.js
+!https_everywhere_lib_bg.wasm
