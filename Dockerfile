@@ -1,4 +1,4 @@
-FROM rust:latest
+FROM rust:1.35.0
 MAINTAINER William Budington "bill@eff.org"
 
 WORKDIR /root
@@ -10,6 +10,7 @@ RUN ln -s /root/node-v10.15.3-linux-x64/bin/npm /usr/local/bin/npm
 WORKDIR /opt
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 ADD Cargo.toml ./
+ADD Cargo.lock ./
 RUN mkdir src
 RUN touch src/lib.rs
 RUN wasm-pack build
