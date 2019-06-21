@@ -11,6 +11,7 @@ WORKDIR /opt
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 ADD Cargo.toml ./
 ADD Cargo.lock ./
+ADD lib-core ./lib-core
 RUN mkdir src
 RUN touch src/lib.rs
 RUN wasm-pack build

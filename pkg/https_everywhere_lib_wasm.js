@@ -308,17 +308,17 @@ __exports.__wbindgen_throw = function(ptr, len) {
     throw new Error(getStringFromWasm(ptr, len));
 };
 
-function freeRuleSets(ptr) {
+function freeJsRuleSets(ptr) {
 
-    wasm.__wbg_rulesets_free(ptr);
+    wasm.__wbg_jsrulesets_free(ptr);
 }
 /**
-* RuleSets consists of a tuple hashmap of rulesets, keyed by some target FQDN
+* A newtype for rulesets, wrapping all the JS functionality
 */
-class RuleSets {
+class JsRuleSets {
 
     static __wrap(ptr) {
-        const obj = Object.create(RuleSets.prototype);
+        const obj = Object.create(JsRuleSets.prototype);
         obj.ptr = ptr;
 
         return obj;
@@ -327,15 +327,22 @@ class RuleSets {
     free() {
         const ptr = this.ptr;
         this.ptr = 0;
-        freeRuleSets(ptr);
+        freeJsRuleSets(ptr);
     }
 
     /**
-    * Returns a new rulesets struct
-    * @returns {RuleSets}
+    * Returns a new JsRulesets struct
+    * @returns {JsRuleSets}
     */
     static new() {
-        return RuleSets.__wrap(wasm.rulesets_new());
+        return JsRuleSets.__wrap(wasm.jsrulesets_new());
+    }
+    /**
+    * Returns the number of targets in the current JsRuleSets struct as a `usize`
+    * @returns {number}
+    */
+    count_targets() {
+        return wasm.jsrulesets_count_targets(this.ptr) >>> 0;
     }
     /**
     * Construct and add new rulesets given a JS array of values
@@ -357,7 +364,7 @@ class RuleSets {
     */
     add_all_from_js_array(array, enable_mixed_rulesets, rule_active_states, scope) {
         try {
-            return wasm.rulesets_add_all_from_js_array(this.ptr, addBorrowedObject(array), addBorrowedObject(enable_mixed_rulesets), addBorrowedObject(rule_active_states), addBorrowedObject(scope));
+            return wasm.jsrulesets_add_all_from_js_array(this.ptr, addBorrowedObject(array), addBorrowedObject(enable_mixed_rulesets), addBorrowedObject(rule_active_states), addBorrowedObject(scope));
 
         } finally {
             heap[stack_pointer++] = undefined;
@@ -369,20 +376,13 @@ class RuleSets {
 
     }
     /**
-    * Returns the number of targets in the current RuleSets struct as a `usize`
-    * @returns {number}
-    */
-    count_targets() {
-        return wasm.rulesets_count_targets(this.ptr) >>> 0;
-    }
-    /**
     * Remove a RuleSet from the RuleSets struct
     * @param {any} ruleset_jsval
     * @returns {void}
     */
     remove_ruleset(ruleset_jsval) {
         try {
-            return wasm.rulesets_remove_ruleset(this.ptr, addBorrowedObject(ruleset_jsval));
+            return wasm.jsrulesets_remove_ruleset(this.ptr, addBorrowedObject(ruleset_jsval));
 
         } finally {
             heap[stack_pointer++] = undefined;
@@ -401,7 +401,7 @@ class RuleSets {
     */
     potentially_applicable(host) {
         try {
-            return takeObject(wasm.rulesets_potentially_applicable(this.ptr, addBorrowedObject(host)));
+            return takeObject(wasm.jsrulesets_potentially_applicable(this.ptr, addBorrowedObject(host)));
 
         } finally {
             heap[stack_pointer++] = undefined;
@@ -410,13 +410,13 @@ class RuleSets {
 
     }
 }
-__exports.RuleSets = RuleSets;
+__exports.JsRuleSets = JsRuleSets;
 
 __exports.__wbindgen_object_drop_ref = function(i) { dropObject(i); };
 
 function init(module) {
     let result;
-    const imports = { './https_everywhere_lib': __exports };
+    const imports = { './https_everywhere_lib_wasm': __exports };
 
     if (module instanceof URL || typeof module === 'string' || module instanceof Request) {
 

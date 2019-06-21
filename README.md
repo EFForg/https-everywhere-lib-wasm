@@ -1,12 +1,12 @@
-# HTTPS Everywhere Library
+# HTTPS Everywhere WASM Library
 
 ## Building build environment
 
-    docker build -t https-everywhere-lib .
+    docker build -t https-everywhere-lib-wasm .
 
 ## Running build environment
 
-    docker run -it --rm -v $(pwd):/opt https-everywhere-lib
+    docker run -it --rm -v $(pwd):/opt https-everywhere-lib-wasm
 
 ## Building library
 

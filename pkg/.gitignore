@@ -1,4 +1,4 @@
 *
 !.gitignore
-!https_everywhere_lib.js
-!https_everywhere_lib_bg.wasm
+!https_everywhere_lib_wasm.js
+!https_everywhere_lib_wasm_bg.wasm

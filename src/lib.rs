@@ -1,9 +1,11 @@
 use wasm_bindgen::prelude::*;
 use js_sys::{Array, Reflect, Boolean, Set, Object};
-use std::collections::BTreeMap;
 use std::rc::Rc;
 
 mod debugging;
+
+pub use https_everywhere_lib_core::{Rule, CookieRule, RuleSet};
+use https_everywhere_lib_core::RuleSets;
 
 const ERR: &str = "could not convert property to JS";
 
@@ -56,31 +58,13 @@ thread_local! {
     };
 }
 
-/// A Rule is used to rewrite URLs from some regular expression to some string
-#[derive(Debug)]
-pub enum Rule {
-    Trivial,
-    NonTrivial(String, String)
+pub trait JsObject {
+    fn to_js_object(&self) -> Object;
 }
 
-impl Rule {
-
-    /// Returns a rule with the from regex and replacement string specified
-    ///
-    /// # Arguments
-    ///
-    /// * `from_regex` - A string that will be compiled to regex indicating the URL to replace
-    /// * `to` - A string indicating the replacement value
-    pub fn new(from_regex: String, to: String) -> Rule {
-        if &from_regex == "^http:" && &to == "https:" {
-            Rule::Trivial
-        } else {
-            Rule::NonTrivial(from_regex, to)
-        }
-    }
-
+impl JsObject for Rule {
     /// Convert a rule to a JS object
-    pub fn to_js_object(&self) -> Object {
+    fn to_js_object(&self) -> Object {
         let object = Object::new();
         JS_STRINGS.with(|jss| {
             match &self {
@@ -98,31 +82,9 @@ impl Rule {
     }
 }
 
-
-/// A CookieRule is used to secure cookies which conform to some name and host constraints
-#[derive(Debug)]
-pub struct CookieRule {
-    host_regex: String, // RegExp
-    name_regex: String // RegExp
-}
-
-impl CookieRule {
-
-    /// Returns a cookierule with the host and scope regex specified
-    ///
-    /// # Arguments
-    ///
-    /// * `host_regex` - A string that will be compiled to regex indicating the host of the cookie
-    /// * `name_regex` - A string that will be compiled to regex indicating the name of the cookie
-    pub fn new(host_regex: String, name_regex: String) -> CookieRule {
-        CookieRule {
-            host_regex,
-            name_regex
-        }
-    }
-
+impl JsObject for CookieRule {
     /// Convert a ruleset to a JS object
-    pub fn to_js_object(&self) -> Object {
+    fn to_js_object(&self) -> Object {
         let object = Object::new();
         JS_STRINGS.with(|jss| {
             Reflect::set(&object, &jss.host, &JsValue::from(&self.host_regex)).expect(ERR);
@@ -132,42 +94,61 @@ impl CookieRule {
     }
 }
 
-/// A RuleSet is a grouping of rules which act on some target
-#[derive(Debug)]
-pub struct RuleSet {
-    pub name: String,
-    rules: Vec<Rule>,
-    exclusions: Option<String>, // RegExp
-    cookierules: Option<Vec<CookieRule>>,
-    pub active: bool,
-    pub default_state: bool,
-    pub scope: Rc<Option<String>>, // RegExp
-    pub note: Option<String>
+impl JsObject for RuleSet {
+    /// Convert a ruleset to a JS object
+    fn to_js_object(&self) -> Object {
+        let object = Object::new();
+        JS_STRINGS.with(|jss| {
+            Reflect::set(&object, &jss.name, &JsValue::from(&self.name)).expect(ERR);
+            Reflect::set(&object, &jss.active, &JsValue::from_bool(self.active.clone())).expect(ERR);
+            Reflect::set(&object, &jss.default_state, &JsValue::from_bool(self.default_state.clone())).expect(ERR);
+            match self.scope.as_ref() {
+                Some(scope) => { Reflect::set(&object, &jss.scope, &JsValue::from(scope)).expect(ERR); },
+                None => {}
+            }
+            match &self.note {
+                Some(note) => { Reflect::set(&object, &jss.note, &JsValue::from(note)).expect(ERR); },
+                None => {}
+            }
+
+            let rules = Array::new();
+            for rule in &self.rules {
+                rules.push(&rule.to_js_object());
+            }
+            Reflect::set(&object, &jss.rules, &rules).expect(ERR);
+
+            match &self.exclusions {
+                Some(exclusions) => {
+                    Reflect::set(&object, &jss.exclusions, &JsValue::from(exclusions)).expect(ERR);
+                },
+                None => {}
+            }
+
+            match &self.cookierules {
+                Some(cookierules) => {
+                    let cookierules_array = Array::new();
+                    for cookierule in cookierules {
+                        cookierules_array.push(&cookierule.to_js_object());
+                    }
+                    Reflect::set(&object, &jss.cookierules, &cookierules_array).expect(ERR);
+                },
+                None => {}
+            }
+        });
+        object
+    }
 }
 
-impl RuleSet {
+pub trait JsRuleSet {
+    fn add_rules(&mut self, rules_array: &Array);
+    fn add_exclusions(&mut self, exclusions_array: &Array);
+    fn add_cookierules(&mut self, cookierules_array: &Array);
+    fn is_equivalent_to(&self, ruleset_jsval: &JsValue) -> bool;
+}
 
-    /// Returns a ruleset with the name and scope specified
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - A string that holds the name of the ruleset
-    /// * `scope` - An optional string slice specifying the scope of the ruleset
-    pub fn new(name: String, scope: Rc<Option<String>>) -> RuleSet {
-        RuleSet {
-            name,
-            rules: vec![],
-            exclusions: None,
-            cookierules: None,
-            active: true,
-            default_state: true,
-            scope,
-            note: None
-        }
-    }
-
+impl JsRuleSet for RuleSet {
     /// Add rules, specified in JS array
-    pub fn add_rules(&mut self, rules_array: &Array){
+    fn add_rules(&mut self, rules_array: &Array){
         for rule_result in rules_array.values() {
             let rule_obj = rule_result.unwrap();
             if rule_obj.is_object() {
@@ -200,7 +181,7 @@ impl RuleSet {
     }
 
     /// Add exclusions to the ruleset from an exclusions JS array
-    pub fn add_exclusions(&mut self, exclusions_array: &Array){
+    fn add_exclusions(&mut self, exclusions_array: &Array){
         let mut exclusions = vec![];
         for exclusion_result in exclusions_array.values() {
             let exclusion_string = exclusion_result.unwrap();
@@ -213,7 +194,7 @@ impl RuleSet {
     }
 
     /// Add cookierules to the ruleset from a cookierules array
-    pub fn add_cookierules(&mut self, cookierules_array: &Array){
+    fn add_cookierules(&mut self, cookierules_array: &Array){
         let mut cookierules = vec![];
         for cookierule_result in cookierules_array.values() {
             let cookierule_obj = cookierule_result.unwrap();
@@ -235,7 +216,7 @@ impl RuleSet {
     }
 
     /// Return a bool indicating whether the given JS ruleset is equivalent
-    pub fn is_equivalent_to(&self, ruleset_jsval: &JsValue) -> bool {
+    fn is_equivalent_to(&self, ruleset_jsval: &JsValue) -> bool {
         let mut result = false;
 
         if ruleset_jsval.is_object() {
@@ -282,61 +263,25 @@ impl RuleSet {
         result
     }
 
-    /// Convert a ruleset to a JS object
-    pub fn to_js_object(&self) -> Object {
-        let object = Object::new();
-        JS_STRINGS.with(|jss| {
-            Reflect::set(&object, &jss.name, &JsValue::from(&self.name)).expect(ERR);
-            Reflect::set(&object, &jss.active, &JsValue::from_bool(self.active.clone())).expect(ERR);
-            Reflect::set(&object, &jss.default_state, &JsValue::from_bool(self.default_state.clone())).expect(ERR);
-            match self.scope.as_ref() {
-                Some(scope) => { Reflect::set(&object, &jss.scope, &JsValue::from(scope)).expect(ERR); },
-                None => {}
-            }
-            match &self.note {
-                Some(note) => { Reflect::set(&object, &jss.note, &JsValue::from(note)).expect(ERR); },
-                None => {}
-            }
-
-            let rules = Array::new();
-            for rule in &self.rules {
-                rules.push(&rule.to_js_object());
-            }
-            Reflect::set(&object, &jss.rules, &rules).expect(ERR);
-
-            match &self.exclusions {
-                Some(exclusions) => {
-                    Reflect::set(&object, &jss.exclusions, &JsValue::from(exclusions)).expect(ERR);
-                },
-                None => {}
-            }
-
-            match &self.cookierules {
-                Some(cookierules) => {
-                    let cookierules_array = Array::new();
-                    for cookierule in cookierules {
-                        cookierules_array.push(&cookierule.to_js_object());
-                    }
-                    Reflect::set(&object, &jss.cookierules, &cookierules_array).expect(ERR);
-                },
-                None => {}
-            }
-        });
-        object
-    }
 }
 
-/// RuleSets consists of a tuple hashmap of rulesets, keyed by some target FQDN
+
+/// A newtype for rulesets, wrapping all the JS functionality
 #[wasm_bindgen]
 #[derive(Debug)]
-pub struct RuleSets(BTreeMap<String, Vec<Rc<RuleSet>>>);
+pub struct JsRuleSets(RuleSets);
 
 #[wasm_bindgen]
-impl RuleSets {
+impl JsRuleSets {
 
-    /// Returns a new rulesets struct
-    pub fn new() -> RuleSets {
-        RuleSets(BTreeMap::new())
+    /// Returns a new JsRulesets struct
+    pub fn new() -> JsRuleSets {
+        JsRuleSets(RuleSets::new())
+    }
+
+    /// Returns the number of targets in the current JsRuleSets struct as a `usize`
+    pub fn count_targets(&self) -> usize {
+        self.0.count_targets()
     }
 
     /// Construct and add new rulesets given a JS array of values
@@ -435,12 +380,12 @@ impl RuleSets {
                             let target = target_result.unwrap();
                             if target.is_string() {
                                 let target = target.as_string().unwrap();
-                                match self.0.get_mut(&target) {
+                                match (self.0).0.get_mut(&target) {
                                     Some(rs_vector) => {
                                         rs_vector.push(Rc::clone(&rs_rc));
                                     },
                                     None => {
-                                        self.0.insert(target, vec![Rc::clone(&rs_rc)]);
+                                        (self.0).0.insert(target, vec![Rc::clone(&rs_rc)]);
                                     }
                                 }
                             }
@@ -458,15 +403,10 @@ impl RuleSets {
         }
     }
 
-    /// Returns the number of targets in the current RuleSets struct as a `usize`
-    pub fn count_targets (&self) -> usize {
-        self.0.len()
-    }
-
     #[cfg(debug_assertions)]
     /// Print the entire RuleSets struct
     pub fn print_targets (&self) {
-        console_log!("{:?}", self.0);
+        console_log!("{:?}", (self.0).0);
     }
 
     /// Remove a RuleSet from the RuleSets struct
@@ -476,8 +416,8 @@ impl RuleSets {
                 if let Ok(name) = Reflect::get(&ruleset_jsval, &jss.name) {
                     if name.is_string() {
                         let name = name.as_string().unwrap();
-                        if self.0.contains_key(&name) {
-                            let ruleset_vec = self.0.remove(&name).unwrap();
+                        if (self.0).0.contains_key(&name) {
+                            let ruleset_vec = (self.0).0.remove(&name).unwrap();
                             let mut new_ruleset_vec = vec![];
 
                             for ruleset in ruleset_vec {
@@ -487,7 +427,7 @@ impl RuleSets {
                             }
 
                             if new_ruleset_vec.len() > 0 {
-                                self.0.insert(name, new_ruleset_vec);
+                                (self.0).0.insert(name, new_ruleset_vec);
                             }
                         }
                     }
@@ -505,8 +445,8 @@ impl RuleSets {
         let results = Set::new(&Array::new());
 
         let try_add = |host: &String| {
-            if self.0.contains_key(host) {
-                if let Some(rulesets) = self.0.get(host) {
+            if (self.0).0.contains_key(host) {
+                if let Some(rulesets) = (self.0).0.get(host) {
                     for ruleset in rulesets {
                         results.add(&ruleset.to_js_object());
                     }

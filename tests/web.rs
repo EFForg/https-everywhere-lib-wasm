@@ -2,7 +2,7 @@ use std::rc::Rc;
 use wasm_bindgen_test::*;
 use wasm_bindgen::prelude::*;
 use js_sys::{Array,Boolean};
-use https_everywhere_lib::{Rule,CookieRule,RuleSet,RuleSets};
+use https_everywhere_lib_wasm::{Rule,CookieRule,RuleSet,JsRuleSet,JsRuleSets,JsObject};
 
 #[macro_use]
 extern crate matches;
@@ -106,9 +106,9 @@ fn convert_ruleset_to_js_object() {
 }
 
 
-// RuleSets tests
-fn mock_rulesets() -> RuleSets {
-    let mut mock_rulesets = RuleSets::new();
+// JsRuleSets tests
+fn mock_rulesets() -> JsRuleSets {
+    let mut mock_rulesets = JsRuleSets::new();
     mock_rulesets.add_all_from_js_array(&rulesets(), &enable_mixed_rulesets(), &ruleset_active_states(), &scope());
     mock_rulesets
 }
