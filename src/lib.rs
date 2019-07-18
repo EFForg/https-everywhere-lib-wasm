@@ -4,37 +4,37 @@ use std::rc::Rc;
 
 mod debugging;
 
-pub use https_everywhere_lib_core::{Rule, CookieRule, RuleSet};
+use https_everywhere_lib_core::{Rule, CookieRule, RuleSet};
 use https_everywhere_lib_core::RuleSets;
 
 const ERR: &str = "could not convert property to JS";
 
 #[derive(Debug)]
-pub struct StaticJsStrings {
-    pub active: JsValue,
-    pub cookierules: JsValue,
-    pub default_off: JsValue,
-    pub default_state: JsValue,
-    pub exclusion: JsValue,
-    pub exclusions: JsValue,
-    pub from: JsValue,
-    pub host: JsValue,
-    pub mixed_content: JsValue,
-    pub name: JsValue,
-    pub note: JsValue,
-    pub platform: JsValue,
-    pub rule: JsValue,
-    pub rules: JsValue,
-    pub scope: JsValue,
-    pub securecookie: JsValue,
-    pub state: JsValue,
-    pub target: JsValue,
-    pub to: JsValue,
-    pub user_rule: JsValue,
+struct StaticJsStrings {
+    active: JsValue,
+    cookierules: JsValue,
+    default_off: JsValue,
+    default_state: JsValue,
+    exclusion: JsValue,
+    exclusions: JsValue,
+    from: JsValue,
+    host: JsValue,
+    mixed_content: JsValue,
+    name: JsValue,
+    note: JsValue,
+    platform: JsValue,
+    rule: JsValue,
+    rules: JsValue,
+    scope: JsValue,
+    securecookie: JsValue,
+    state: JsValue,
+    target: JsValue,
+    to: JsValue,
+    user_rule: JsValue,
 }
 
 thread_local! {
-    pub static JS_STRINGS: StaticJsStrings = StaticJsStrings {
+    static JS_STRINGS: StaticJsStrings = StaticJsStrings {
         active: JsValue::from("active"),
         cookierules: JsValue::from("cookierules"),
         default_off: JsValue::from("default_off"),
@@ -58,7 +58,7 @@ thread_local! {
     };
 }
 
-pub trait JsObject {
+trait JsObject {
     fn to_js_object(&self) -> Object;
 }
 
@@ -139,7 +139,7 @@ impl JsObject for RuleSet {
     }
 }
 
-pub trait JsRuleSet {
+trait JsRuleSet {
     fn add_rules(&mut self, rules_array: &Array);
     fn add_exclusions(&mut self, exclusions_array: &Array);
     fn add_cookierules(&mut self, cookierules_array: &Array);
