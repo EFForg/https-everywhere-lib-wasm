@@ -2,7 +2,7 @@ use std::rc::Rc;
 use wasm_bindgen_test::*;
 use wasm_bindgen::prelude::*;
 use js_sys::{Array,Boolean};
-use https_everywhere_lib_wasm::{Rule,CookieRule,RuleSet,JsRuleSet,JsRuleSets,JsObject};
+use https_everywhere_lib_wasm::{Rule,CookieRule,RuleSet,JsRuleSet,JsRuleSets,ToJavaScript};
 
 #[macro_use]
 extern crate matches;
@@ -51,25 +51,25 @@ fn create_nontrivial_rule() {
 }
 
 #[wasm_bindgen_test]
-fn convert_trivial_rule_to_js_object() {
+fn convert_trivial_rule_to_javascript() {
     let trivial_rule = Rule::new(String::from("^http:"), String::from("https:"));
-    let converted_js_object = stringify(&trivial_rule.to_js_object());
+    let converted_js_object = stringify(&trivial_rule.to_javascript());
     assert_eq!(converted_js_object, trivial_rule_json());
 }
 
 #[wasm_bindgen_test]
-fn convert_nontrivial_rule_to_js_object() {
+fn convert_nontrivial_rule_to_javascript() {
     let nontrivial_rule = Rule::new(String::from("^http://example\\.com/"), String::from("https://example.com/"));
-    let converted_js_object = stringify(&nontrivial_rule.to_js_object());
+    let converted_js_object = stringify(&nontrivial_rule.to_javascript());
     assert_eq!(converted_js_object, nontrivial_rule_json());
 }
 
 
 // CookieRule tests
 #[wasm_bindgen_test]
-fn convert_cookierule_to_js_object() {
+fn convert_cookierule_to_javascript() {
     let cookierule = CookieRule::new(String::from(".+"), String::from(".+"));
-    let converted_js_object = stringify(&cookierule.to_js_object());
+    let converted_js_object = stringify(&cookierule.to_javascript());
     assert_eq!(converted_js_object, cookierule_json());
 }
 
@@ -100,8 +100,8 @@ fn nonequivalence() {
 }
 
 #[wasm_bindgen_test]
-fn convert_ruleset_to_js_object() {
-    let converted_js_object = stringify(&mock_ruleset().to_js_object());
+fn convert_ruleset_to_javascript() {
+    let converted_js_object = stringify(&mock_ruleset().to_javascript());
     assert_eq!(converted_js_object, ruleset_json());
 }
 

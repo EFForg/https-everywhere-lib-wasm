@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 mod debugging;
 
-use https_everywhere_lib_core::{Rule, CookieRule, RuleSet};
+pub use https_everywhere_lib_core::{Rule, CookieRule, RuleSet};
 use https_everywhere_lib_core::RuleSets;
 
 const ERR: &str = "could not convert property to JS";
@@ -58,13 +58,24 @@ thread_local! {
     };
 }
 
-trait JsObject {
-    fn to_js_object(&self) -> Object;
+pub trait ToJavaScript {
+    fn to_javascript(&self) -> JsValue;
 }
 
-impl JsObject for Rule {
-    /// Convert a rule to a JS object
-    fn to_js_object(&self) -> Object {
+impl ToJavaScript for Vec<Rc<RuleSet>>{
+    /// Convert a vector of rulesets to a JS value
+    fn to_javascript(&self) -> JsValue {
+        let results = Set::new(&Array::new());
+        for rs in self {
+            results.add(&rs.to_javascript());
+        }
+        results.into()
+    }
+}
+
+impl ToJavaScript for Rule {
+    /// Convert a rule to a JS value
+    fn to_javascript(&self) -> JsValue {
         let object = Object::new();
         JS_STRINGS.with(|jss| {
             match &self {
@@ -78,25 +89,25 @@ impl JsObject for Rule {
                 }
             }
         });
-        object
+        object.into()
     }
 }
 
-impl JsObject for CookieRule {
-    /// Convert a ruleset to a JS object
-    fn to_js_object(&self) -> Object {
+impl ToJavaScript for CookieRule {
+    /// Convert a ruleset to a JS value
+    fn to_javascript(&self) -> JsValue {
         let object = Object::new();
         JS_STRINGS.with(|jss| {
             Reflect::set(&object, &jss.host, &JsValue::from(&self.host_regex)).expect(ERR);
             Reflect::set(&object, &jss.name, &JsValue::from(&self.name_regex)).expect(ERR);
         });
-        object
+        object.into()
     }
 }
 
-impl JsObject for RuleSet {
+impl ToJavaScript for RuleSet {
     /// Convert a ruleset to a JS object
-    fn to_js_object(&self) -> Object {
+    fn to_javascript(&self) -> JsValue {
         let object = Object::new();
         JS_STRINGS.with(|jss| {
             Reflect::set(&object, &jss.name, &JsValue::from(&self.name)).expect(ERR);
@@ -113,7 +124,7 @@ impl JsObject for RuleSet {
 
             let rules = Array::new();
             for rule in &self.rules {
-                rules.push(&rule.to_js_object());
+                rules.push(&rule.to_javascript());
             }
             Reflect::set(&object, &jss.rules, &rules).expect(ERR);
 
@@ -128,18 +139,18 @@ impl JsObject for RuleSet {
                 Some(cookierules) => {
                     let cookierules_array = Array::new();
                     for cookierule in cookierules {
-                        cookierules_array.push(&cookierule.to_js_object());
+                        cookierules_array.push(&cookierule.to_javascript());
                     }
                     Reflect::set(&object, &jss.cookierules, &cookierules_array).expect(ERR);
                 },
                 None => {}
             }
         });
-        object
+        object.into()
     }
 }
 
-trait JsRuleSet {
+pub trait JsRuleSet {
     fn add_rules(&mut self, rules_array: &Array);
     fn add_exclusions(&mut self, exclusions_array: &Array);
     fn add_cookierules(&mut self, cookierules_array: &Array);
@@ -441,51 +452,12 @@ impl JsRuleSets {
     /// # Arguments
     ///
     /// * `host` - A JS string which indicates the host to search for potentially applicable rulesets
-    pub fn potentially_applicable (&self, host: &JsValue) -> Set {
-        let results = Set::new(&Array::new());
-
-        let try_add = |host: &String| {
-            if (self.0).0.contains_key(host) {
-                if let Some(rulesets) = (self.0).0.get(host) {
-                    for ruleset in rulesets {
-                        results.add(&ruleset.to_js_object());
-                    }
-                }
-            }
-        };
-
+    pub fn potentially_applicable (&self, host: &JsValue) -> JsValue {
         if host.is_string() {
             let host = host.as_string().unwrap();
-
-            // Try adding the full host
-            try_add(&host);
-
-            // Ensure host is well-formed (RFC 1035)
-            if host.len() <= 0 || host.len() > 255 || host.find("..").is_some() {
-                return results;
-            }
-
-            // Replace www.example.com with www.example.*
-            // eat away from the right for once and only once
-            let mut segmented: Vec<&str> = host.split('.').collect();
-            let last_index = segmented.len() - 1;
-            let tld = segmented[last_index];
-
-            segmented[last_index] = "*";
-            let tmp_host = segmented.join(".");
-            try_add(&tmp_host);
-            segmented[last_index] = tld;
-
-            // now eat away from the left, with *, so that for x.y.z.google.com we
-            // check *.y.z.google.com, *.z.google.com and *.google.com
-            for index in 0..(segmented.len() - 1) {
-                let mut segmented_tmp = segmented.clone();
-                segmented_tmp[index] = "*";
-                let tmp_host = segmented_tmp.join(".");
-                try_add(&tmp_host);
-            }
+            self.0.potentially_applicable(&host).to_javascript()
+        } else {
+            Set::new(&Array::new()).into()
         }
-
-        results
     }
 }
