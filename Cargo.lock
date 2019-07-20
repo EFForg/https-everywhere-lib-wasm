@@ -26,13 +26,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "https-everywhere-lib-core"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "https-everywhere-lib-wasm"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
- "https-everywhere-lib-core 0.1.0",
+ "https-everywhere-lib-core 0.1.1",
  "js-sys 0.3.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "matches 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.48 (registry+https://github.com/rust-lang/crates.io-index)",
