@@ -5,7 +5,7 @@ use std::rc::Rc;
 mod debugging;
 
 pub use https_everywhere_lib_core::{Rule, CookieRule, RuleSet};
-use https_everywhere_lib_core::RuleSets;
+use https_everywhere_lib_core::RuleSets as CoreRuleSets;
 
 const ERR: &str = "could not convert property to JS";
 
@@ -280,14 +280,14 @@ impl JsRuleSet for RuleSet {
 /// A newtype for rulesets, wrapping all the JS functionality
 #[wasm_bindgen]
 #[derive(Debug)]
-pub struct JsRuleSets(RuleSets);
+pub struct RuleSets(CoreRuleSets);
 
 #[wasm_bindgen]
-impl JsRuleSets {
+impl RuleSets {
 
     /// Returns a new JsRulesets struct
-    pub fn new() -> JsRuleSets {
-        JsRuleSets(RuleSets::new())
+    pub fn new() -> RuleSets {
+        RuleSets(CoreRuleSets::new())
     }
 
     /// Returns the number of targets in the current JsRuleSets struct as a `usize`

@@ -201,10 +201,10 @@ function debugString(val) {
 /**
 * A newtype for rulesets, wrapping all the JS functionality
 */
-class JsRuleSets {
+class RuleSets {
 
     static __wrap(ptr) {
-        const obj = Object.create(JsRuleSets.prototype);
+        const obj = Object.create(RuleSets.prototype);
         obj.ptr = ptr;
 
         return obj;
@@ -214,22 +214,22 @@ class JsRuleSets {
         const ptr = this.ptr;
         this.ptr = 0;
 
-        wasm.__wbg_jsrulesets_free(ptr);
+        wasm.__wbg_rulesets_free(ptr);
     }
     /**
     * Returns a new JsRulesets struct
-    * @returns {JsRuleSets}
+    * @returns {RuleSets}
     */
     static new() {
-        const ret = wasm.jsrulesets_new();
-        return JsRuleSets.__wrap(ret);
+        const ret = wasm.rulesets_new();
+        return RuleSets.__wrap(ret);
     }
     /**
     * Returns the number of targets in the current JsRuleSets struct as a `usize`
     * @returns {number}
     */
     count_targets() {
-        const ret = wasm.jsrulesets_count_targets(this.ptr);
+        const ret = wasm.rulesets_count_targets(this.ptr);
         return ret >>> 0;
     }
     /**
@@ -251,7 +251,7 @@ class JsRuleSets {
     */
     add_all_from_js_array(array, enable_mixed_rulesets, rule_active_states, scope) {
         try {
-            wasm.jsrulesets_add_all_from_js_array(this.ptr, addBorrowedObject(array), addBorrowedObject(enable_mixed_rulesets), addBorrowedObject(rule_active_states), addBorrowedObject(scope));
+            wasm.rulesets_add_all_from_js_array(this.ptr, addBorrowedObject(array), addBorrowedObject(enable_mixed_rulesets), addBorrowedObject(rule_active_states), addBorrowedObject(scope));
         } finally {
             heap[stack_pointer++] = undefined;
             heap[stack_pointer++] = undefined;
@@ -265,7 +265,7 @@ class JsRuleSets {
     */
     remove_ruleset(ruleset_jsval) {
         try {
-            wasm.jsrulesets_remove_ruleset(this.ptr, addBorrowedObject(ruleset_jsval));
+            wasm.rulesets_remove_ruleset(this.ptr, addBorrowedObject(ruleset_jsval));
         } finally {
             heap[stack_pointer++] = undefined;
         }
@@ -281,14 +281,14 @@ class JsRuleSets {
     */
     potentially_applicable(host) {
         try {
-            const ret = wasm.jsrulesets_potentially_applicable(this.ptr, addBorrowedObject(host));
+            const ret = wasm.rulesets_potentially_applicable(this.ptr, addBorrowedObject(host));
             return takeObject(ret);
         } finally {
             heap[stack_pointer++] = undefined;
         }
     }
 }
-__exports.JsRuleSets = JsRuleSets;
+__exports.RuleSets = RuleSets;
 
 function init(module) {
 
