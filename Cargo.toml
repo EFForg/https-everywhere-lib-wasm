@@ -3,6 +3,8 @@ name = "https-everywhere-lib-wasm"
 version = "0.1.0"
 authors = ["William Budington <bill@eff.org>"]
 edition = "2018"
+description = "HTTPS Everywhere WASM Library"
+license = "LGPL-2.1-or-later"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
