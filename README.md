@@ -1,5 +1,9 @@
 # HTTPS Everywhere WASM Library
 
+[![Build Status](https://api.travis-ci.org/efforg/https-everywhere-lib-wasm.svg?branch=master)](https://travis-ci.org/efforg/https-everywhere-lib-wasm)
+[![Latest Version](https://img.shields.io/crates/v/https-everywhere-lib-wasm.svg)](https://crates.io/crates/https-everywhere-lib-wasm)
+[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/https-everywhere-lib-wasm)
+
 ## Building build environment
 
     docker build -t https-everywhere-lib-wasm .
