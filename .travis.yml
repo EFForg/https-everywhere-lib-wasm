@@ -1,0 +1,9 @@
+language: minimal
+services:
+  - docker
+install: docker build -t https-everywhere-lib-wasm .
+matrix:
+  include:
+    - env: TEST="wasm-pack-test"
+    - env: TEST="deterministic-build-output"
+script: ./travis_test.sh
