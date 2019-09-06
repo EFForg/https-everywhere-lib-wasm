@@ -1,11 +1,12 @@
 [package]
 name = "https-everywhere-lib-wasm"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["William Budington <bill@eff.org>"]
 edition = "2018"
 description = "HTTPS Everywhere WASM Library"
 license = "LGPL-2.1-or-later"
 repository = "https://github.com/efforg/https-everywhere-lib-wasm"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
