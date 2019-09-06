@@ -316,7 +316,7 @@ impl RuleSets {
 
         let mut add_one_from_js = |jsval| {
             JS_STRINGS.with(|jss| {
-                let mut ruleset_name: String;
+                let ruleset_name: String;
                 let mut default_state = true;
                 let mut note = String::new();
 
