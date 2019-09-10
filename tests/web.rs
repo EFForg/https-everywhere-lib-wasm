@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 use wasm_bindgen_test::*;
 use wasm_bindgen::prelude::*;
 use js_sys::{Array,Boolean};
@@ -76,7 +76,7 @@ fn convert_cookierule_to_javascript() {
 
 // RuleSet tests
 fn mock_ruleset() -> RuleSet {
-    let scope = Rc::new(Some(String::from("^http://www\\.example\\.com/")));
+    let scope = Arc::new(Some(String::from("^http://www\\.example\\.com/")));
     let mut ruleset = RuleSet::new(String::from("Example Ruleset"), scope);
     ruleset.add_cookierules(&cookierules());
     ruleset.add_rules(&rules());

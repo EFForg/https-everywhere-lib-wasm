@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 use js_sys::{Array, Reflect, Boolean, Set, Object};
-use std::rc::Rc;
+use std::sync::Arc;
 
 mod debugging;
 
@@ -62,7 +62,7 @@ pub trait ToJavaScript {
     fn to_javascript(&self) -> JsValue;
 }
 
-impl ToJavaScript for Vec<Rc<RuleSet>>{
+impl ToJavaScript for Vec<Arc<RuleSet>>{
     /// Convert a vector of rulesets to a JS value
     fn to_javascript(&self) -> JsValue {
         let results = Set::new(&Array::new());
@@ -308,10 +308,10 @@ impl RuleSets {
     /// rulesets being added (see the [ruleset update channels](https://github.com/EFForg/https-everywhere/blob/master/docs/en_US/ruleset-update-channels.md) documentation)
     pub fn add_all_from_js_array(&mut self, array: &Array, enable_mixed_rulesets: &Boolean, rule_active_states: &JsValue, scope: &JsValue) {
 
-        let scope: Rc<Option<String>> = if scope.is_string() {
-            Rc::new(Some(scope.as_string().unwrap()))
+        let scope: Arc<Option<String>> = if scope.is_string() {
+            Arc::new(Some(scope.as_string().unwrap()))
         } else {
-            Rc::new(None)
+            Arc::new(None)
         };
 
         let mut add_one_from_js = |jsval| {
@@ -358,7 +358,7 @@ impl RuleSets {
                         }
                     }
 
-                    let mut rs = RuleSet::new(ruleset_name, Rc::clone(&scope));
+                    let mut rs = RuleSet::new(ruleset_name, Arc::clone(&scope));
                     rs.default_state = default_state;
                     rs.note = match note.len() {
                         0 => None,
@@ -384,7 +384,7 @@ impl RuleSets {
                         }
                     }
 
-                    let rs_rc = Rc::new(rs);
+                    let rs_rc = Arc::new(rs);
                     let target_jsval = Reflect::get(&jsval, &jss.target).unwrap();
                     if Array::is_array(&target_jsval) {
                         for target_result in &Array::from(&target_jsval).values() {
@@ -393,10 +393,10 @@ impl RuleSets {
                                 let target = target.as_string().unwrap();
                                 match (self.0).0.get_mut(&target) {
                                     Some(rs_vector) => {
-                                        rs_vector.push(Rc::clone(&rs_rc));
+                                        rs_vector.push(Arc::clone(&rs_rc));
                                     },
                                     None => {
-                                        (self.0).0.insert(target, vec![Rc::clone(&rs_rc)]);
+                                        (self.0).0.insert(target, vec![Arc::clone(&rs_rc)]);
                                     }
                                 }
                             }
@@ -433,7 +433,7 @@ impl RuleSets {
 
                             for ruleset in ruleset_vec {
                                 if !ruleset.is_equivalent_to(ruleset_jsval) {
-                                    new_ruleset_vec.push(Rc::clone(&ruleset));
+                                    new_ruleset_vec.push(Arc::clone(&ruleset));
                                 }
                             }
 
