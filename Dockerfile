@@ -1,11 +1,8 @@
-FROM rust:1.36
-MAINTAINER William Budington "bill@eff.org"
+FROM rust:1.38
+LABEL maintainer="William Budington <bill@eff.org>"
 
-WORKDIR /root
-RUN curl -O https://nodejs.org/dist/v10.16.0/node-v10.16.0-linux-x64.tar.xz
-RUN tar -Jxvf node-v10.16.0-linux-x64.tar.xz
-RUN ln -s /root/node-v10.16.0-linux-x64/bin/node /usr/local/bin/node
-RUN ln -s /root/node-v10.16.0-linux-x64/bin/npm /usr/local/bin/npm
+COPY --from=node:10.16-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:10.16-slim /usr/local/bin/npm /usr/local/bin/npm
 
 WORKDIR /opt
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
