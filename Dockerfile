@@ -1,11 +1,11 @@
-FROM rust:1.38
+FROM rust:1.41
 MAINTAINER William Budington "bill@eff.org"
 
 WORKDIR /root
-RUN curl -O https://nodejs.org/dist/v12.13.0/node-v12.13.0-linux-x64.tar.xz
-RUN tar -Jxvf node-v12.13.0-linux-x64.tar.xz
-RUN ln -s /root/node-v12.13.0-linux-x64/bin/node /usr/local/bin/node
-RUN ln -s /root/node-v12.13.0-linux-x64/bin/npm /usr/local/bin/npm
+RUN curl -O https://nodejs.org/dist/v12.16.1/node-v12.16.1-linux-x64.tar.xz
+RUN tar -Jxvf node-v12.16.1-linux-x64.tar.xz
+RUN ln -s /root/node-v12.16.1-linux-x64/bin/node /usr/local/bin/node
+RUN ln -s /root/node-v12.16.1-linux-x64/bin/npm /usr/local/bin/npm
 
 WORKDIR /opt
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
