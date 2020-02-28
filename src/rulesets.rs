@@ -469,15 +469,16 @@ impl RuleSets {
             JS_STRINGS.with(|jss| {
                 for (host, ruleset) in simple_rules {
                     for rule in &ruleset.rules {
-                        let re = RegExp::new(&rule.from_regex(), "");
-                        if re.test(&format!("http://{}/", host)) {
+                        let from_re = RegExp::new(&rule.from_regex(), "");
+                        if from_re.test(&format!("http://{}/", host)) {
+                            let from_re_string = from_re.to_string();
                             let rule_object = Object::new();
                             Reflect::set(&rule_object, &jss.host, &JsValue::from(&host)).expect(ERR);
-                            Reflect::set(&rule_object, &jss.from_regex, &JsValue::from(&rule.from_regex())).expect(ERR);
+                            Reflect::set(&rule_object, &jss.from_regex, &JsValue::from(&from_re_string)).expect(ERR);
                             Reflect::set(&rule_object, &jss.to, &JsValue::from(&rule.to())).expect(ERR);
                             Reflect::set(&rule_object, &jss.scope_regex, &match ruleset.scope.as_ref().as_ref() {
                                 None => JsValue::null(),
-                                Some(scope) => JsValue::from(scope),
+                                Some(scope) => JsValue::from(RegExp::new(scope, "").to_string()),
                             }).expect(ERR);
                             simple_rules_array.push(&rule_object);
                         }

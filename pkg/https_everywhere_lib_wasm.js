@@ -325,6 +325,10 @@ function init(module) {
         const ret = typeof(val) === 'object' && val !== null;
         return ret;
     };
+    imports.wbg.__wbindgen_object_clone_ref = function(arg0) {
+        const ret = getObject(arg0);
+        return addHeapObject(ret);
+    };
     imports.wbg.__wbindgen_jsval_eq = function(arg0, arg1) {
         const ret = getObject(arg0) === getObject(arg1);
         return ret;
@@ -392,6 +396,10 @@ function init(module) {
     imports.wbg.__wbg_test_1c1b53250bceac51 = function(arg0, arg1, arg2) {
         const ret = getObject(arg0).test(getStringFromWasm(arg1, arg2));
         return ret;
+    };
+    imports.wbg.__wbg_toString_bc87920f1a2b55ac = function(arg0) {
+        const ret = getObject(arg0).toString();
+        return addHeapObject(ret);
     };
     imports.wbg.__wbg_add_5aa1e13fed2f3154 = function(arg0, arg1) {
         const ret = getObject(arg0).add(getObject(arg1));
