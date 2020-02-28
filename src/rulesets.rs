@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use js_sys::{Array, Reflect, Boolean, Set, Object};
+use js_sys::{Array, Reflect, Boolean, Set, Object, RegExp};
 use std::sync::Arc;
 #[cfg(debug_assertions)]
 use log::{error, info, warn};
@@ -20,6 +20,7 @@ struct StaticJsStrings {
     exclusion: JsValue,
     exclusions: JsValue,
     from: JsValue,
+    from_regex: JsValue,
     host: JsValue,
     mixed_content: JsValue,
     name: JsValue,
@@ -28,6 +29,7 @@ struct StaticJsStrings {
     rule: JsValue,
     rules: JsValue,
     scope: JsValue,
+    scope_regex: JsValue,
     securecookie: JsValue,
     state: JsValue,
     target: JsValue,
@@ -44,6 +46,7 @@ thread_local! {
         exclusion: JsValue::from("exclusion"),
         exclusions: JsValue::from("exclusions"),
         from: JsValue::from("from"),
+        from_regex: JsValue::from("from_regex"),
         host: JsValue::from("host"),
         mixed_content: JsValue::from("mixedcontent"),
         name: JsValue::from("name"),
@@ -52,6 +55,7 @@ thread_local! {
         rule: JsValue::from("rule"),
         rules: JsValue::from("rules"),
         scope: JsValue::from("scope"),
+        scope_regex: JsValue::from("scope_regex"),
         securecookie: JsValue::from("securecookie"),
         state: JsValue::from("state"),
         target: JsValue::from("target"),
@@ -448,6 +452,41 @@ impl RuleSets {
                     }
                 }
             });
+        }
+    }
+
+    /// Return a JS array of rulesets which are active and have no exclusions, for all hosts that
+    /// are in a single ruleset, and end in the given ending
+    ///
+    /// # Arguments
+    ///
+    /// * `ending` - A JS string which indicates the target ending to search for
+    pub fn get_simple_rules_ending_with(&self, ending: &JsValue) -> JsValue {
+        if ending.is_string() {
+            let ending = ending.as_string().unwrap();
+            let simple_rules = self.0.get_simple_rules_ending_with(&ending);
+            let simple_rules_array = Array::new();
+            JS_STRINGS.with(|jss| {
+                for (host, ruleset) in simple_rules {
+                    for rule in &ruleset.rules {
+                        let re = RegExp::new(&rule.from_regex(), "");
+                        if re.test(&format!("http://{}/", host)) {
+                            let rule_object = Object::new();
+                            Reflect::set(&rule_object, &jss.host, &JsValue::from(&host)).expect(ERR);
+                            Reflect::set(&rule_object, &jss.from_regex, &JsValue::from(&rule.from_regex())).expect(ERR);
+                            Reflect::set(&rule_object, &jss.to, &JsValue::from(&rule.to())).expect(ERR);
+                            Reflect::set(&rule_object, &jss.scope_regex, &match ruleset.scope.as_ref().as_ref() {
+                                None => JsValue::null(),
+                                Some(scope) => JsValue::from(scope),
+                            }).expect(ERR);
+                            simple_rules_array.push(&rule_object);
+                        }
+                    }
+                }
+            });
+            simple_rules_array.into()
+        } else {
+            Array::new().into()
         }
     }
 

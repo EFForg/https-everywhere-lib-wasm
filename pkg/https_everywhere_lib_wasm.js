@@ -271,6 +271,24 @@ class RuleSets {
         }
     }
     /**
+    * Return a JS array of rulesets which are active and have no exclusions, for all hosts that
+    * are in a single ruleset, and end in the given ending
+    *
+    * # Arguments
+    *
+    * * `ending` - A JS string which indicates the target ending to search for
+    * @param {any} ending
+    * @returns {any}
+    */
+    get_simple_rules_ending_with(ending) {
+        try {
+            const ret = wasm.rulesets_get_simple_rules_ending_with(this.ptr, addBorrowedObject(ending));
+            return takeObject(ret);
+        } finally {
+            heap[stack_pointer++] = undefined;
+        }
+    }
+    /**
     * Return a JS set of rulesets that apply to the given host
     *
     * # Arguments
@@ -366,6 +384,14 @@ function init(module) {
     imports.wbg.__wbg_new_abadb45e63451a4b = function() {
         const ret = new Object();
         return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_new_8b2f143a50ad38e8 = function(arg0, arg1, arg2, arg3) {
+        const ret = new RegExp(getStringFromWasm(arg0, arg1), getStringFromWasm(arg2, arg3));
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_test_1c1b53250bceac51 = function(arg0, arg1, arg2) {
+        const ret = getObject(arg0).test(getStringFromWasm(arg1, arg2));
+        return ret;
     };
     imports.wbg.__wbg_add_5aa1e13fed2f3154 = function(arg0, arg1) {
         const ret = getObject(arg0).add(getObject(arg1));

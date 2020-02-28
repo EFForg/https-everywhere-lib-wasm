@@ -24,6 +24,8 @@ extern "C" {
     fn enable_mixed_rulesets() -> Boolean;
     fn ruleset_active_states() -> JsValue;
     fn scope() -> JsValue;
+    fn get_simple_rules_ending_with_result_json_1() -> JsValue;
+    fn get_simple_rules_ending_with_result_json_2() -> JsValue;
     fn potentially_applicable_result_json_1() -> JsValue;
     fn potentially_applicable_result_json_2() -> JsValue;
     fn added_user_rule() -> Array;
@@ -116,6 +118,14 @@ fn mock_rulesets() -> RuleSets {
 #[wasm_bindgen_test]
 fn count_rulesets_targets() {
     assert_eq!(mock_rulesets().count_targets(), 28);
+}
+
+#[wasm_bindgen_test]
+fn rulesets_get_simple_rules_ending_with() {
+    let get_simple_rules_ending_with_result_1 = mock_rulesets().get_simple_rules_ending_with(&JsValue::from(".com"));
+    let get_simple_rules_ending_with_result_2 = mock_rulesets().get_simple_rules_ending_with(&JsValue::from(".org"));
+    assert_eq!(stringify(&get_simple_rules_ending_with_result_1), get_simple_rules_ending_with_result_json_1());
+    assert_eq!(stringify(&get_simple_rules_ending_with_result_2), get_simple_rules_ending_with_result_json_2());
 }
 
 #[wasm_bindgen_test]
