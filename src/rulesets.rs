@@ -6,7 +6,7 @@ use log::{error, info, warn};
 #[cfg(debug_assertions)]
 use wasm_bindgen_console_logger::DEFAULT_LOGGER;
 
-pub use https_everywhere_lib_core::rulesets::{Rule, CookieRule, RuleSet};
+pub use https_everywhere_lib_core::{RegEx, rulesets::{Rule, CookieRule, RuleSet}};
 use https_everywhere_lib_core::RuleSets as CoreRuleSets;
 
 const ERR: &str = "could not convert property to JS";
@@ -62,6 +62,22 @@ thread_local! {
         to: JsValue::from("to"),
         user_rule: JsValue::from("user rule"),
     };
+}
+
+pub struct JavaScriptRegEx {
+    regex: RegExp,
+}
+
+impl RegEx for JavaScriptRegEx {
+    fn new(re: &str) -> JavaScriptRegEx {
+        JavaScriptRegEx {
+            regex: RegExp::new(re, ""),
+        }
+    }
+
+    fn is_match(&self, text: &str) -> bool {
+        self.regex.test(text)
+    }
 }
 
 pub trait ToJavaScript {
@@ -464,25 +480,20 @@ impl RuleSets {
     pub fn get_simple_rules_ending_with(&self, ending: &JsValue) -> JsValue {
         if ending.is_string() {
             let ending = ending.as_string().unwrap();
-            let simple_rules = self.0.get_simple_rules_ending_with(&ending);
+            let simple_rules = self.0.get_simple_rules_ending_with::<JavaScriptRegEx>(&ending);
             let simple_rules_array = Array::new();
             JS_STRINGS.with(|jss| {
-                for (host, ruleset) in simple_rules {
-                    for rule in &ruleset.rules {
-                        let from_re = RegExp::new(&rule.from_regex(), "");
-                        if from_re.test(&format!("http://{}/", host)) {
-                            let from_re_string = from_re.to_string();
-                            let rule_object = Object::new();
-                            Reflect::set(&rule_object, &jss.host, &JsValue::from(&host)).expect(ERR);
-                            Reflect::set(&rule_object, &jss.from_regex, &JsValue::from(&from_re_string)).expect(ERR);
-                            Reflect::set(&rule_object, &jss.to, &JsValue::from(&rule.to())).expect(ERR);
-                            Reflect::set(&rule_object, &jss.scope_regex, &match ruleset.scope.as_ref().as_ref() {
-                                None => JsValue::null(),
-                                Some(scope) => JsValue::from(RegExp::new(scope, "").to_string()),
-                            }).expect(ERR);
-                            simple_rules_array.push(&rule_object);
-                        }
-                    }
+                for (host, ruleset, rule) in simple_rules {
+                    let from_re_string = RegExp::new(&rule.from_regex(), "").to_string();
+                    let rule_object = Object::new();
+                    Reflect::set(&rule_object, &jss.host, &JsValue::from(host)).expect(ERR);
+                    Reflect::set(&rule_object, &jss.from_regex, &JsValue::from(&from_re_string)).expect(ERR);
+                    Reflect::set(&rule_object, &jss.to, &JsValue::from(&rule.to())).expect(ERR);
+                    Reflect::set(&rule_object, &jss.scope_regex, &match ruleset.scope.as_ref().as_ref() {
+                        None => JsValue::null(),
+                        Some(scope) => JsValue::from(RegExp::new(scope, "").to_string()),
+                    }).expect(ERR);
+                    simple_rules_array.push(&rule_object);
                 }
             });
             simple_rules_array.into()
