@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 use js_sys::{Array, Reflect, Boolean, Set, Object, RegExp};
 use std::sync::Arc;
 #[cfg(debug_assertions)]
-use log::{error, info, warn};
+use log::info;
 #[cfg(debug_assertions)]
 use wasm_bindgen_console_logger::DEFAULT_LOGGER;
 
@@ -133,8 +133,8 @@ impl ToJavaScript for RuleSet {
         let object = Object::new();
         JS_STRINGS.with(|jss| {
             Reflect::set(&object, &jss.name, &JsValue::from(&self.name)).expect(ERR);
-            Reflect::set(&object, &jss.active, &JsValue::from_bool(self.active.clone())).expect(ERR);
-            Reflect::set(&object, &jss.default_state, &JsValue::from_bool(self.default_state.clone())).expect(ERR);
+            Reflect::set(&object, &jss.active, &JsValue::from_bool(self.active)).expect(ERR);
+            Reflect::set(&object, &jss.default_state, &JsValue::from_bool(self.default_state)).expect(ERR);
             match self.scope.as_ref() {
                 Some(scope) => { Reflect::set(&object, &jss.scope, &JsValue::from(scope)).expect(ERR); },
                 None => {}
@@ -302,6 +302,7 @@ impl JsRuleSet for RuleSet {
 /// A newtype for rulesets, wrapping all the JS functionality
 #[wasm_bindgen]
 #[derive(Debug)]
+#[derive(Default)]
 pub struct RuleSets(CoreRuleSets);
 
 #[wasm_bindgen]
@@ -461,7 +462,7 @@ impl RuleSets {
                                 }
                             }
 
-                            if new_ruleset_vec.len() > 0 {
+                            if !new_ruleset_vec.is_empty() {
                                 (self.0).0.insert(name, new_ruleset_vec);
                             }
                         }
