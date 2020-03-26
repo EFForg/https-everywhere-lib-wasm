@@ -4,6 +4,10 @@
 [![Latest Version](https://img.shields.io/crates/v/https-everywhere-lib-wasm.svg)](https://crates.io/crates/https-everywhere-lib-wasm)
 [![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/https-everywhere-lib-wasm)
 
+## Preparing for the build
+
+    git submodule update --init --recursive
+
 ## Building build environment
 
     docker build -t https-everywhere-lib-wasm .
