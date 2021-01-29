@@ -308,7 +308,7 @@ pub struct RuleSets(CoreRuleSets);
 #[wasm_bindgen]
 impl RuleSets {
 
-    /// Returns a new JsRulesets struct
+    /// Returns a new RuleSets struct
     pub fn new() -> RuleSets {
         RuleSets(CoreRuleSets::new())
     }
