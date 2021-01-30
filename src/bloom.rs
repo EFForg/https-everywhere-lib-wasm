@@ -69,10 +69,6 @@ impl Bloom {
         } else {
             panic!("sip_keys should be an array of length 2");
         };
-        log::info!("{:?}", bitmap);
-        log::info!("{:?}", bitmap_bits);
-        log::info!("{:?}", k_num);
-        log::info!("{:?}", sip_keys);
 
         Bloom(UpstreamBloom::from_existing(bitmap, bitmap_bits, k_num, sip_keys))
     }
