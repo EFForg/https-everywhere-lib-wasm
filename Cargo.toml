@@ -19,10 +19,9 @@ wasm-bindgen-console-logger = "0.1"
 bloomfilter = "1.0"
 console_error_panic_hook = "0.1"
 https-everywhere-lib-core = { version = "0.1.2", path = "lib-core", default_features = false, features = ["potentially_applicable", "get_simple_rules_ending_with"] }
-cfg-if = "1.0"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.2"
+wasm-bindgen-test = "0.3"
 matches = "0.1"
 
 [profile.release]

@@ -45,6 +45,7 @@ const potentially_applicable_result_json_2 = JSON.stringify([{
 }]);
 const added_user_rule = [{"name":"example.com","target":["example.com"],"rule":[{"to":"https:","from":"^http://example\\.com/"}],"default_off":"user rule"}];
 const removed_user_rule = {"name":"example.com","rules":[{"from_c":{},"to":"https:"}],"exclusions":null,"cookierules":null,"active":true,"default_state":true,"scope":{},"note":"user rule"};
+const bloom_args = [new Uint8Array([53, 89, 153, 27]), 32, 8, [["7042164324123011823", "4838412312024205537"], ["13508439373888375696", "10975652807371557587"]]];
 
 module.exports = {
   trivial_rule_json: () => {
@@ -109,5 +110,8 @@ module.exports = {
   },
   removed_user_rule: () => {
     return removed_user_rule;
+  },
+  bloom_args: () => {
+    return bloom_args;
   },
 };

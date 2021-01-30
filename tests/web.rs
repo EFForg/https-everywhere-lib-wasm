@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use wasm_bindgen_test::*;
 use wasm_bindgen::prelude::*;
-use js_sys::{Array,Boolean};
-use https_everywhere_lib_wasm::{Rule,CookieRule,RuleSet,RuleSets,JsRuleSet,ToJavaScript};
+use js_sys::{Array,Boolean,JsString,Number,Uint8Array};
+use https_everywhere_lib_wasm::{Rule,Bloom,CookieRule,RuleSet,RuleSets,JsRuleSet,ToJavaScript};
 
 #[macro_use]
 extern crate matches;
@@ -30,6 +30,7 @@ extern "C" {
     fn potentially_applicable_result_json_2() -> JsValue;
     fn added_user_rule() -> Array;
     fn removed_user_rule() -> JsValue;
+    fn bloom_args() -> Array;
 }
 
 #[wasm_bindgen]
@@ -38,6 +39,18 @@ extern {
     pub fn stringify(s: &JsValue) -> JsValue;
 }
 
+// Bloom tests
+#[wasm_bindgen_test]
+fn create_bloom() {
+    let bloom_args = bloom_args();
+    let bitmap = Uint8Array::from(bloom_args.get(0));
+    let bitmap_bits = Number::from(bloom_args.get(1));
+    let k_num = Number::from(bloom_args.get(2));
+    let sip_keys = Array::from(&bloom_args.get(3));
+    let bloom = Bloom::from_existing(&bitmap, &bitmap_bits, &k_num, &sip_keys);
+    assert!(bloom.check(&JsString::from("example.com")));
+    assert!(!bloom.check(&JsString::from("some.other.domain.tld")));
+}
 
 // Rule tests
 #[wasm_bindgen_test]
